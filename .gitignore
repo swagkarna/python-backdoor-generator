@@ -1,0 +1,33 @@
+##################
+##Ignore FILES####
+##################
+
+#Ignore .log files
+*.log
+#Ignore .tmp files
+*.tmp
+#Ignore Thumbs.db
+Thumbs.db
+#Ignore .DS_Store
+.DS_Store
+#Ignore .dat
+*.dat
+
+##################
+##Ignore DIR######
+##################
+
+#Ignore LOG dirs
+LOG/
+#Ignore tmp dir
+tmp/
+#Ignore OUT dir
+OUT/
+#Ignore __pycache__ dir
+*/__pycache__/
+#Ignore .vscode dir
+.vscode/
+#Ignore venv dir
+venv/
+#Ignore client_test dir
+client_test/
