@@ -15,6 +15,7 @@ import os
 
 #Not native Libs
 # import PyInstaller.__main__
+from shutil import rmtree
 
 #Temporary workaround
 import subprocess
@@ -40,7 +41,7 @@ class ErrorWritingPyClient(Exception):
     def __init__(self):
         Exception.__init__(self,'ERROR WRITING TO PyClient')
 
-def Build(HOST, PORT, OutputDir='OUT',SampleClient='SampleClient.txt' , Debug=False):
+def Build(HOST, PORT, OutputDir='OUT',SampleClient='SampleClient.txt' , Clean=False, Debug=False):
     
     SampleClient = os.path.join(os.getcwd(), 'build', SampleClient)
     OutputDir = os.path.join(os.getcwd(), OutputDir)
@@ -48,6 +49,14 @@ def Build(HOST, PORT, OutputDir='OUT',SampleClient='SampleClient.txt' , Debug=Fa
     PyClient = os.path.join(os.getcwd(), OutputDir, 'Py', PyClientName)
     PyDir = os.path.join(os.getcwd(), OutputDir, 'Py')
 
+    if Clean:
+        
+        if Debug:
+            
+            print('[WARNING] Deleting {}'.format(OutputDir))
+        
+        rmtree(OutputDir)
+    
     if Debug:
         
         print('[INFO] Check if {} exists'.format(OutputDir))

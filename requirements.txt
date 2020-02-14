@@ -1,8 +1,0 @@
-altgraph==0.17
-DateTime==4.3
-future==0.18.2
-pefile==2019.4.18
-PyInstaller==4.0.dev0+55c8855d9d
-pytz==2019.3
-pywin32-ctypes==0.2.0
-zope.interface==4.7.1

