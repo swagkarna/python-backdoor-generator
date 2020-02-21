@@ -1,10 +1,10 @@
-# Lorem-Py
+# simple-backdoor-generator
 
 
 
 ## About
 
-Lorem-Py3 is a TCP backdoor generator written in Python 3.8.0.
+Simple-backdoor-generator is a TCP backdoor generator written in Python 3.8.0.
 
 It generates the payload in a .py and .exe format.
 
@@ -14,7 +14,7 @@ You need to install Python 3.8.0 or higher.
 Now you need to navigate to the project directory for example in windows:
 
 ```
-cd C:\Users\<Your User>\<Path to the project>\Lorem_Py3\Lorem-Py
+cd C:\Users\<Your User>\<Path to the project>\python-backdoor-generator\simple-backdoor-generator
 ```
 
 All the libs are saved in the requirements.txt file.
@@ -55,10 +55,12 @@ Or installing the libs manual by typing :
 ```
 pip install datetime
 pip install socket
-pip install https://github.com/pyinstaller/pyinstaller/archive/develop.tar.gz
+pip install pyinstaller
 pip install argparse
 pip install subprocess
 ```
+
+If you are on linux try installing pyinstaller per your package manager
 
 If you want it in just one command:
 
