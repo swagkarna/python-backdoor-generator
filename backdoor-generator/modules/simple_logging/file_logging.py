@@ -18,7 +18,6 @@ from datetime import datetime
 
 #Not native Libs
 import colorama
-from shutil import rmtree
 
 class FileOnlyModule(Exception):
     def __init__(self):
@@ -224,14 +223,26 @@ class logging:
         except (IOError, OSError):
             
             raise LogFileError
+                
+    def OK(self, inputstr):
         
-    def CleanLog(self):
-        
-        if self.Debug:
+        if self.PrintFeedback and not self.color:
             
-            print('[WARNING] Deleting the {} with all files in it'.format(self.LogDir))
+            print('[OK]{}'.format(inputstr))
             
-        rmtree(self.LogDir)
+        if self.PrintFeedback and self.color:
+            
+            print('{}[OK]{}{}'.format(self.GREEN, inputstr, self.RESET))
+            
+        try:
+            
+            with open(self.LogFile, 'a') as f:
+                
+                f.write('[OK]({}){}'.format(str(self.time_now), str(inputstr)))
+                
+        except (IOError, OSError):
+            
+            raise LogFileError
         
     def INFO(self, inputstr):
         

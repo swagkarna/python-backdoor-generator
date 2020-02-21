@@ -1,0 +1,35 @@
+##################
+##Ignore FILES####
+##################
+
+#Ignore .log files
+*.log
+#Ignore .tmp files
+*.tmp
+#Ignore Thumbs.db
+Thumbs.db
+#Ignore .DS_Store
+.DS_Store
+#Ignore .dat
+*.dat
+#Ignore SampleClient.py
+build/SampleClient.py
+
+##################
+##Ignore DIR######
+##################
+
+#Ignore LOG dirs
+backdoor-generator/LOG/
+#Ignore tmp dir
+backdoor-generator/tmp/
+#Ignore OUT dir
+backdoor-generator/OUT/
+#Ignore __pycache__ dir
+*/__pycache__/
+#Ignore .vscode dir
+.vscode/
+#Ignore venv dir
+venv/
+#Ignore client_test dir
+client_test/
